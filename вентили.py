@@ -4,7 +4,6 @@ from enum import Enum
 from itertools import product
 import math
 
-# Цвета - розовая тема
 COLORS = {
     'INPUT': '#FF6B6B', 'AND': '#4ECDC4', 'NAND': '#45B7D1',
     'OR': '#FFB8B8', 'NOR': '#FFD6A5', 'NOT': '#DDA0DD',
@@ -579,4 +578,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()
