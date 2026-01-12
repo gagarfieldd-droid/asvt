@@ -163,7 +163,7 @@ class LogicStudio:
         control_frame = tk.Frame(left, bg=COLORS['panel_bg'])
         control_frame.pack(fill=tk.X, padx=10, pady=20)
 
-        tk.Button(control_frame, text="Симулировать", bg='#FF8FA3', fg='white',
+        tk.Button(control_frame, text="Запустить", bg='#FF8FA3', fg='white',
                   font=('Arial', 10), command=self.simulate,
                   relief=tk.RAISED).pack(fill=tk.X, pady=5)
 
