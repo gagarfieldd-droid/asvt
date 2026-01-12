@@ -16,6 +16,7 @@ COLORS = {
     'gate_outline': '#FF8FA3',
     'connector_bg': '#FF4D6D'
 }
+
 GATE_W, GATE_H = 100, 70
 CONNECTOR_RADIUS = 12
 GRID = 25
@@ -32,6 +33,7 @@ class GateType(Enum):
 
 class Gate:
     _id = 0
+
     def __init__(self, gate_type, x, y):
         Gate._id += 1
         self.type = gate_type
@@ -63,20 +65,20 @@ class Gate:
         return x0 <= x <= x1 and y0 <= y <= y1
 
     def get_connector_at(self, x, y):
-        # Проверяем выход
         ox, oy = self.get_output_position()
         if math.hypot(x - ox, y - oy) <= CONNECTOR_RADIUS:
             return ('output', 0, (ox, oy))
 
-        # Проверяем входы
         for i, (ix, iy) in enumerate(self.get_input_positions()):
             if math.hypot(x - ix, y - iy) <= CONNECTOR_RADIUS:
                 return ('input', i, (ix, iy))
+
         return None
 
     def toggle(self):
         if self.type == GateType.INPUT:
             self.out_val = 1 - self.out_val
+
     def evaluate(self):
         if self.type == GateType.INPUT:
             return
@@ -108,7 +110,7 @@ class LogicStudio:
     def __init__(self, root):
         self.root = root
         self.root.title("Логические схемы")
-        self.root.geometry("1600x1000")
+        self.root.geometry("1400x800")
 
         self.gates = []
         self.connections = []
@@ -145,6 +147,7 @@ class LogicStudio:
             ("XOR", GateType.XOR, COLORS['XOR']),
             ("OUTPUT", GateType.OUTPUT, COLORS['OUTPUT'])
         ]
+
         for i, (text, gate_type, color) in enumerate(gate_types):
             btn = tk.Button(gate_frame, text=text, bg=color, fg='black',
                             font=('Arial', 10, 'bold'),
@@ -160,7 +163,7 @@ class LogicStudio:
         control_frame = tk.Frame(left, bg=COLORS['panel_bg'])
         control_frame.pack(fill=tk.X, padx=10, pady=20)
 
-        tk.Button(control_frame, text="Запустить", bg='#FF8FA3', fg='white',
+        tk.Button(control_frame, text="Симулировать", bg='#FF8FA3', fg='white',
                   font=('Arial', 10), command=self.simulate,
                   relief=tk.RAISED).pack(fill=tk.X, pady=5)
 
@@ -188,15 +191,6 @@ class LogicStudio:
         canvas_frame.grid_rowconfigure(0, weight=1)
         canvas_frame.grid_columnconfigure(0, weight=1)
 
-        status = ttk.Frame(self.root)
-        status.pack(side=tk.BOTTOM, fill=tk.X, padx=5, pady=2)
-
-        self.status_var = tk.StringVar(value="")
-        self.summary_var = tk.StringVar(value="")
-
-        ttk.Label(status, textvariable=self.status_var).pack(side=tk.LEFT)
-        ttk.Label(status, textvariable=self.summary_var).pack(side=tk.RIGHT)
-
     def bind_events(self):
         self.canvas.bind("<Button-1>", self.on_click)
         self.canvas.bind("<B1-Motion>", self.on_drag)
@@ -217,7 +211,6 @@ class LogicStudio:
         gate = Gate(gate_type, x, y)
         self.gates.append(gate)
         self.draw_gate(gate)
-        self.update_summary()
 
     def draw_gate(self, gate):
         for item in gate.canvas_items + gate.connector_items:
@@ -461,29 +454,17 @@ class LogicStudio:
             self.draw_gate(gate)
 
         self.update_all_connections()
-        self.update_summary()
-
 
     def update_all_connections(self):
         for conn in self.connections:
             self.draw_connection(conn)
-
-    def update_summary(self):
-        inputs = [g for g in self.gates if g.type == GateType.INPUT]
-        outputs = [g for g in self.gates if g.type == GateType.OUTPUT]
-
-        if inputs or outputs:
-            in_text = ", ".join(f"{i}={g.out_val}" for i, g in enumerate(inputs))
-            out_text = ", ".join(f"{i}={g.out_val}" for i, g in enumerate(outputs))
-            self.summary_var.set(f"IN: {in_text or '--'} | OUT: {out_text or '--'}")
-        else:
-            self.summary_var.set("")
 
     def show_truth_table(self):
         inputs = [g for g in self.gates if g.type == GateType.INPUT]
         outputs = [g for g in self.gates if g.type == GateType.OUTPUT]
 
         if not inputs or not outputs:
+            messagebox.showinfo("Ошибка", "Добавьте INPUT и OUTPUT элементы!")
             return
 
         win = tk.Toplevel(self.root)
@@ -537,7 +518,6 @@ class LogicStudio:
         if self.selected_gate == gate:
             self.deselect_all()
 
-        self.update_summary()
         self.simulate()
 
     def delete_connection(self, conn):
@@ -552,6 +532,8 @@ class LogicStudio:
             self.connections.remove(conn)
 
     def clear_all(self):
+        if not self.gates:
+            return
 
         for gate in self.gates:
             for item in gate.canvas_items + gate.connector_items:
@@ -564,19 +546,14 @@ class LogicStudio:
                 self.canvas.delete(conn.start_dot)
             if conn.end_dot:
                 self.canvas.delete(conn.end_dot)
-
         self.gates.clear()
         self.connections.clear()
         self.deselect_all()
-        self.summary_var.set("")
-
 
 def main():
     root = tk.Tk()
     app = LogicStudio(root)
     root.mainloop()
 
-
 if __name__ == "__main__":
-
     main()
